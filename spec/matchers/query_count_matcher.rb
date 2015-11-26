@@ -22,6 +22,10 @@ class QueryCountMatcher
     @count = $query_count
   end
 
+  def supports_block_expectations?
+    true
+  end
+
   def performed_queries
     @queries
   end
@@ -30,7 +34,7 @@ class QueryCountMatcher
     "expected #{@expected_count} queries, got #{@count}\n#{@queries.join("\n")}"
   end
 
-  def negative_failure_message
+  def failure_message_when_negated
     "expected query count not to be #{@expected_count}"
   end
 end

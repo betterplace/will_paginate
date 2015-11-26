@@ -1,5 +1,4 @@
 # encoding: utf-8
-require 'will_paginate/core_ext'
 require 'will_paginate/i18n'
 require 'will_paginate/deprecation'
 
@@ -42,7 +41,7 @@ module WillPaginate
 
     # Returns HTML representing page links for a WillPaginate::Collection-like object.
     # In case there is no more than one page in total, nil is returned.
-    # 
+    #
     # ==== Options
     # * <tt>:class</tt> -- CSS class name for the generated DIV (default: "pagination")
     # * <tt>:previous_label</tt> -- default: "« Previous"
@@ -61,7 +60,7 @@ module WillPaginate
     #
     # All options not recognized by will_paginate will become HTML attributes on the container
     # element for pagination links (the DIV). For example:
-    # 
+    #
     #   <%= will_paginate @posts, :style => 'color:blue' %>
     #
     # will result in:
@@ -140,9 +139,12 @@ module WillPaginate
 
         will_paginate_translate keys, :count => collection.total_entries, :model => model_name do |_, opts|
           case opts[:count]
-          when 0; "No #{opts[:model]} found"
-          when 1; "Displaying #{b}1#{eb} #{opts[:model]}"
-          else    "Displaying #{b}all#{sp}#{opts[:count]}#{eb} #{opts[:model]}"
+          when 0
+            "No #{opts[:model]} found"
+          when 1
+            "Displaying #{b}1#{eb} #{opts[:model]}"
+          else
+            "Displaying #{b}all#{sp}#{opts[:count]}#{eb} #{opts[:model]}"
           end
         end
       else

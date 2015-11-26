@@ -26,7 +26,7 @@ end
 
 module ActiverecordTestConnector
   extend self
-  
+
   attr_accessor :able_to_connect
   attr_accessor :connected
 
@@ -53,7 +53,7 @@ module ActiverecordTestConnector
   end
 
   private
-  
+
   def add_load_path(path)
     dep = defined?(ActiveSupport::Dependencies) ? ActiveSupport::Dependencies : ::Dependencies
     dep.autoload_paths.unshift path
@@ -66,10 +66,10 @@ module ActiverecordTestConnector
     configurations = YAML.load(erb.result)
     raise "no configuration for '#{db}'" unless configurations.key? db
     configuration = configurations[db]
-    
+
     # ActiveRecord::Base.logger = Logger.new(STDOUT) if $0 == 'irb'
     puts "using #{configuration['adapter']} adapter"
-    
+
     ActiveRecord::Base.configurations = { db => configuration }
     ActiveRecord::Base.establish_connection(db.to_sym)
     ActiveRecord::Base.default_timezone = :utc
@@ -84,7 +84,7 @@ module ActiverecordTestConnector
       $stdout = STDOUT
     end
   end
-  
+
   module FixtureSetup
     def fixtures(*tables)
       table_names = tables.map { |t| t.to_s }

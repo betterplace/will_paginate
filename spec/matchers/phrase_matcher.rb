@@ -13,7 +13,7 @@ class PhraseMatcher
     "expected #{@actual.inspect} to contain phrase #{@string.inspect}"
   end
 
-  def negative_failure_message
+  def failure_message_when_negated
     "expected #{@actual.inspect} not to contain phrase #{@string.inspect}"
   end
 end

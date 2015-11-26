@@ -1,4 +1,9 @@
-.bundle
-doc
-*.gem
+.*.sw[pon]
+.AppleDouble
+.DS_Store
+.byebug_history
+.rvmrc
+Gemfile.lock
 coverage
+pkg
+tags

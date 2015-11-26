@@ -1,14 +1,22 @@
-require 'rspec'
-require 'view_helpers/view_example_group'
 begin
-  require 'ruby-debug'
+  require 'byebug'
 rescue LoadError
   # no debugger available
 end
-
+if ENV['START_SIMPLECOV'].to_i == 1
+  require 'simplecov'
+  SimpleCov.start do
+    add_filter "#{File.basename(File.dirname(__FILE__))}/"
+  end
+end
+require 'rspec'
+require 'view_helpers/view_example_group'
 Dir[File.expand_path('../matchers/*_matcher.rb', __FILE__)].each { |matcher| require matcher }
 
+require 'will_paginate'
+
 RSpec.configure do |config|
+
   config.include Module.new {
     protected
 
@@ -41,6 +49,5 @@ RSpec.configure do |config|
     end
   }
 
-  config.mock_with :mocha
-  config.backtrace_clean_patterns << /view_example_group/
+  config.backtrace_exclusion_patterns << /view_example_group/
 end

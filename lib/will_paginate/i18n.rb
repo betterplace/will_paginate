@@ -9,14 +9,9 @@ module WillPaginate
     end
 
     def will_paginate_translate(keys, options = {})
-      if defined? ::I18n
-        defaults = Array(keys).dup
-        defaults << Proc.new if block_given?
-        ::I18n.translate(defaults.shift, options.merge(:default => defaults, :scope => :will_paginate))
-      else
-        key = Array === keys ? keys.first : keys
-        yield key, options
-      end
+      defaults = Array(keys).dup
+      defaults << Proc.new if block_given?
+      ::I18n.translate(defaults.shift, options.merge(:default => defaults, :scope => :will_paginate))
     end
   end
 end

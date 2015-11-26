@@ -15,7 +15,7 @@ module WillPaginate
     module Inheritance
       def inherited(subclass)
         super
-        subclass.per_page = self.per_page
+        subclass.per_page = per_page
       end
     end
   end

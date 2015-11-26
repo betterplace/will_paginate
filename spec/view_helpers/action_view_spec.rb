@@ -32,28 +32,28 @@ describe WillPaginate::ActionView do
     @request = @controller.request
     @template = '<%= will_paginate collection, options %>'
   end
-  
+
   attr_reader :assigns, :controller, :request
-  
+
   def render(locals)
     @view = ActionView::Base.new([], @assigns, @controller)
     @view.request = @request
     @view.singleton_class.send(:include, @controller._routes.url_helpers)
     @view.render(:inline => @template, :locals => locals)
   end
-  
+
   ## basic pagination ##
-  
+
   it "should render" do
     paginate do |pagination|
       assert_select 'a[href]', 3 do |elements|
         validate_page_numbers [2,3,2], elements
-        assert_select elements.last, ':last-child', "Next &#8594;"
       end
+      assert_select 'a.next_page', "Next →"
       assert_select 'span', 1
-      assert_select 'span.disabled:first-child', '&#8592; Previous'
+      assert_select 'span.disabled:first-child', '← Previous'
       assert_select 'em.current', '1'
-      pagination.first.inner_text.should == '&#8592; Previous 1 2 3 Next &#8594;'
+      expect(pagination.first.inner_text).to eq('← Previous 1 2 3 Next →')
     end
   end
 
@@ -67,7 +67,7 @@ describe WillPaginate::ActionView do
   end
 
   it "should render nothing when there is only 1 page" do
-    paginate(:per_page => 30).should be_empty
+    expect(paginate(:per_page => 30)).to be_empty
   end
 
   it "should paginate with options" do
@@ -76,13 +76,13 @@ describe WillPaginate::ActionView do
         validate_page_numbers [1,1,3,3], elements
         # test rel attribute values:
         assert_select elements[1], 'a', '1' do |link|
-          link.first['rel'].should == 'prev start'
+          expect(link.first['rel']).to eq('prev start')
         end
         assert_select elements.first, 'a', "Prev" do |link|
-          link.first['rel'].should == 'prev start'
+          expect(link.first['rel']).to eq('prev start')
         end
         assert_select elements.last, 'a', "Next" do |link|
-          link.first['rel'].should == 'next'
+          expect(link.first['rel']).to eq('next')
         end
       end
       assert_select '.current', '2'
@@ -95,14 +95,27 @@ describe WillPaginate::ActionView do
     end
   end
 
+  it "should paginate using standard renderer instance" do
+    renderer = WillPaginate::ActionView::LinkRenderer.new
+
+    paginate({ :per_page => 2 }, :inner_window => 0, :outer_window => 0, :renderer => renderer) do
+      assert_select 'span.gap', '…'
+    end
+  end
+
+  it 'url method has to be implemented in subclass' do
+    renderer = WillPaginate::ViewHelpers::LinkRenderer.new
+    expect { renderer.instance_eval { url(:foo) } }.to raise_error(NotImplementedError)
+  end
+
   it "should paginate using a custom renderer instance" do
     renderer = WillPaginate::ActionView::LinkRenderer.new
-    def renderer.gap() '<span class="my-gap">~~</span>' end
-    
+    allow(renderer).to receive(:gap_text).and_return '~~'
+
     paginate({ :per_page => 2 }, :inner_window => 0, :outer_window => 0, :renderer => renderer) do
-      assert_select 'span.my-gap', '~~'
+      assert_select 'span.gap', '~~'
     end
-    
+
     renderer = AdditionalLinkAttributesRenderer.new(:title => 'rendered')
     paginate({}, :renderer => renderer) do
       assert_select 'a[title=rendered]', 3
@@ -118,29 +131,27 @@ describe WillPaginate::ActionView do
 
   it "should match expected markup" do
     paginate
-    expected = <<-HTML
-      <div class="pagination"><span class="previous_page disabled">&#8592; Previous</span>
-      <em class="current">1</em>
-      <a href="/foo/bar?page=2" rel="next">2</a>
-      <a href="/foo/bar?page=3">3</a>
-      <a href="/foo/bar?page=2" class="next_page" rel="next">Next &#8594;</a></div>
+    expected = <<-HTML.strip_heredoc.chomp.gsub(?\n, ' ')
+    <div class="pagination"><span class="previous_page disabled">&#8592; Previous</span>
+    <em class="current">1</em>
+    <a rel="next" href="/foo/bar?page=2">2</a>
+    <a href="/foo/bar?page=3">3</a>
+    <a class="next_page" rel="next" href="/foo/bar?page=2">Next &#8594;</a></div>
     HTML
-    expected.strip!.gsub!(/\s{2,}/, ' ')
-    expected_dom = HTML::Document.new(expected).root
-    
-    html_document.root.should == expected_dom
+    expected_dom = Nokogiri::HTML.fragment(expected)
+    expect(Nokogiri::HTML.fragment(rendered).to_s).to eq(expected_dom.to_s)
   end
-  
+
   it "should output escaped URLs" do
     paginate({:page => 1, :per_page => 1, :total_entries => 2},
              :page_links => false, :params => { :tag => '<br>' })
-    
+
     assert_select 'a[href]', 1 do |links|
       query = links.first['href'].split('?', 2)[1]
-      query.split('&amp;').sort.should == %w(page=2 tag=%3Cbr%3E)
+      expect(query.split('&').sort).to eq(%w(page=2 tag=%3Cbr%3E))
     end
   end
-  
+
   ## advanced options for pagination ##
 
   it "should be able to render without container" do
@@ -158,14 +169,14 @@ describe WillPaginate::ActionView do
   end
 
   ## other helpers ##
-  
+
   it "should render a paginated section" do
     @template = <<-ERB
       <%= paginated_section collection, options do %>
         <%= content_tag :div, '', :id => "developers" %>
       <% end %>
     ERB
-    
+
     paginate
     assert_select 'div.pagination', 2
     assert_select 'div.pagination + div#developers', 1
@@ -182,9 +193,9 @@ describe WillPaginate::ActionView do
     assert_select 'div.pagination', 0
     assert_select 'div#developers', 1
   end
-  
+
   ## parameter handling in page links ##
-  
+
   it "should preserve parameters on GET" do
     request.params :foo => { :bar => 'baz' }
     paginate
@@ -199,46 +210,46 @@ describe WillPaginate::ActionView do
     assert_no_links_match /99/
     assert_no_links_match /ftp/
   end
-  
+
   it "should not preserve parameters on POST" do
     request.post
     request.params :foo => 'bar'
     paginate
     assert_no_links_match /foo=bar/
   end
-  
+
   it "should add additional parameters to links" do
     paginate({}, :params => { :foo => 'bar' })
     assert_links_match /foo=bar/
   end
-  
+
   it "should add anchor parameter" do
     paginate({}, :params => { :anchor => 'anchor' })
     assert_links_match /#anchor$/
   end
-  
+
   it "should remove arbitrary parameters" do
     request.params :foo => 'bar'
     paginate({}, :params => { :foo => nil })
     assert_no_links_match /foo=bar/
   end
-    
+
   it "should override default route parameters" do
     paginate({}, :params => { :controller => 'baz', :action => 'list' })
     assert_links_match %r{\Wbaz/list\W}
   end
-  
+
   it "should paginate with custom page parameter" do
     paginate({ :page => 2 }, :param_name => :developers_page) do
       assert_select 'a[href]', 4 do |elements|
         validate_page_numbers [1,1,3,3], elements, :developers_page
       end
-    end    
+    end
   end
-  
+
   it "should paginate with complex custom page parameter" do
     request.params :developers => { :page => 2 }
-    
+
     paginate({ :page => 2 }, :param_name => 'developers[page]') do
       assert_select 'a[href]', 4 do |links|
         assert_links_match /\?developers\[page\]=\d+$/, links
@@ -279,23 +290,23 @@ describe WillPaginate::ActionView do
   ## internal hardcore stuff ##
 
   it "should be able to guess the collection name" do
-    collection = mock
-    collection.expects(:total_pages).returns(1)
-    
+    collection = double
+    expect(collection).to receive(:total_pages).and_return(1)
+
     @template = '<%= will_paginate options %>'
     controller.controller_name = 'developers'
     assigns['developers'] = collection
-    
+
     paginate(nil)
   end
-  
+
   it "should fail if the inferred collection is nil" do
     @template = '<%= will_paginate options %>'
     controller.controller_name = 'developers'
-    
-    lambda {
+
+    expect {
       paginate(nil)
-    }.should raise_error(ActionView::TemplateError, /@developers/)
+    }.to raise_error(ActionView::TemplateError, /@developers/)
   end
 
   ## i18n
@@ -322,11 +333,11 @@ describe WillPaginate::ActionView do
     helper.default_url_options[:controller] = 'dummy'
 
     collection = WillPaginate::Collection.new(2, 1, 3)
-    @render_output = helper.will_paginate(collection)
+    self.rendered = helper.will_paginate(collection)
 
     assert_select 'a[href]', 4 do |links|
       urls = links.map {|l| l['href'] }.uniq
-      urls.should == ['/dummy/page/1', '/dummy/page/3']
+      expect(urls).to eq(['/dummy/page/1', '/dummy/page/3'])
     end
   end
 
@@ -341,11 +352,11 @@ describe WillPaginate::ActionView do
       :controller => 'dummy'
 
     collection = WillPaginate::Collection.new(2, 1, 3)
-    @render_output = helper.will_paginate(collection)
+    self.rendered = helper.will_paginate(collection)
 
     assert_select 'a[href]', 4 do |links|
       urls = links.map {|l| l['href'] }.uniq
-      urls.should == ['/dummy/page/1', '/dummy/page/3']
+      expect(urls).to eq(['/dummy/page/1', '/dummy/page/3'])
     end
   end
 
@@ -371,10 +382,10 @@ end
 class DummyController
   attr_reader :request
   attr_accessor :controller_name
-  
+
   include ActionController::UrlFor
   include Routes.url_helpers
-  
+
   def initialize
     @request = DummyRequest.new
   end
@@ -398,13 +409,13 @@ end
 class DummyRequest
   attr_accessor :symbolized_path_parameters
   alias :path_parameters :symbolized_path_parameters
-  
+
   def initialize
     @get = true
     @params = {}
     @symbolized_path_parameters = { :controller => 'foo', :action => 'bar' }
   end
-  
+
   def get?
     @get
   end
@@ -416,7 +427,7 @@ class DummyRequest
   def relative_url_root
     ''
   end
-  
+
   def script_name
     ''
   end
@@ -425,7 +436,7 @@ class DummyRequest
     @params.update(more) if more
     @params
   end
-  
+
   def host_with_port
     'example.com'
   end
@@ -434,7 +445,7 @@ class DummyRequest
   def optional_port
     ''
   end
-  
+
   def protocol
     'http:'
   end

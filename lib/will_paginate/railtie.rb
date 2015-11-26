@@ -1,6 +1,7 @@
 require 'will_paginate'
 require 'will_paginate/page_number'
 require 'will_paginate/collection'
+require 'will_paginate/array'
 require 'will_paginate/i18n'
 
 module WillPaginate
