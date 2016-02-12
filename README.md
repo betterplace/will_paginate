@@ -36,7 +36,7 @@ class Post
 end
 
 # set per_page globally
-WillPaginate.per_page = 10
+WillPaginate.per_page_default = 10
 ```
 
 New in Active Record 3:

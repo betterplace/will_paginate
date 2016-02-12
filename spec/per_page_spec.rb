@@ -10,20 +10,20 @@ describe WillPaginate::PerPage do
   it "has the default value" do
     expect(MyModel.per_page).to eq(30)
 
-    WillPaginate.per_page = 10
+    WillPaginate.per_page_default = 10
     begin
       expect(MyModel.per_page).to eq(10)
     ensure
-      WillPaginate.per_page = 30
+      WillPaginate.per_page_default = 30
     end
   end
 
   it "casts values to int" do
-    WillPaginate.per_page = '10'
+    WillPaginate.per_page_default = '10'
     begin
       expect(MyModel.per_page).to eq(10)
     ensure
-      WillPaginate.per_page = 30
+      WillPaginate.per_page_default = 30
     end
   end
 

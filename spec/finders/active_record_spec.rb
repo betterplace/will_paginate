@@ -340,4 +340,40 @@ describe WillPaginate::ActiveRecord do
       Project.page(307445734561825862)
     }.to raise_error(WillPaginate::InvalidPage, "invalid offset: 9223372036854775830")
   end
- end
+
+  context 'if a per_page_maximum is set' do
+    around(:each) do |example|
+      fail 'we need more records to test this' if Topic.count < 3
+      WillPaginate.per_page_maximum = 2
+      example.run
+      WillPaginate.per_page_maximum = nil
+    end
+
+    context 'when using the finder method' do
+      it 'respects the maximum' do
+        results = Topic.paginate(page: 1, per_page: 3)
+        expect(results.per_page).to eq(2)
+        expect(results.size).to     eq(2)
+      end
+
+      it 'respects values for per_page that are lower than the maximum' do
+        results = Topic.paginate(page: 1, per_page: 1)
+        expect(results.per_page).to eq(1)
+        expect(results.size).to     eq(1)
+      end
+    end
+
+    context 'when using the relation method' do
+      it 'respects the maximum' do
+        results = Topic.page(1).per_page(3)
+        expect(results.per_page).to eq(2)
+        expect(results.size).to     eq(2)
+      end
+      it 'respects values for per_page that are lower than the maximum' do
+        results = Topic.page(1).per_page(1)
+        expect(results.per_page).to eq(1)
+        expect(results.size).to     eq(1)
+      end
+    end
+  end
+end

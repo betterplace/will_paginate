@@ -23,7 +23,7 @@ class Array
   # most useful method of will_paginate library.
   def paginate(options = {})
     page     = options[:page] || 1
-    per_page = options[:per_page] || WillPaginate.per_page
+    per_page = options[:per_page] || WillPaginate.per_page_default
     total    = options[:total_entries] || length
 
     WillPaginate::Collection.create(page, per_page, total) do |pager|

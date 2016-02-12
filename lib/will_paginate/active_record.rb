@@ -25,7 +25,7 @@ module WillPaginate
 
       def per_page(value = nil)
         if value.present?
-          limit(value)
+          limit(WillPaginate.safe_per_page(value))
         else
           limit_value
         end
@@ -134,21 +134,18 @@ module WillPaginate
     module Pagination
       def paginate(page:, per_page: nil, total_entries: nil)
         per_page = per_page() if per_page.blank?
-        rel = limit(per_page.to_i).page(page)
+        per_page = WillPaginate.safe_per_page(per_page.to_i)
+        rel = limit(per_page).page(page)
         rel.total_entries = total_entries.to_i if total_entries.present?
         rel
       end
 
       def page(num)
-        rel = if ::ActiveRecord::Relation === self
-                self
-              else
-                all
-              end
-
+        rel = (::ActiveRecord::Relation === self) ? self : all
         rel = rel.extending(RelationMethods)
         pagenum = ::WillPaginate::PageNumber(num)
         per_page = rel.limit_value || per_page()
+        per_page = WillPaginate.safe_per_page(per_page)
         rel = rel.offset(pagenum.to_offset(per_page).to_i)
         rel = rel.limit(per_page) unless rel.limit_value
         rel.current_page = pagenum

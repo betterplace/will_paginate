@@ -58,9 +58,9 @@ module WillPaginate
     # and the total number of entries. The last argument is optional because it
     # is best to do lazy counting; in other words, count *conditionally* after
     # populating the collection using the +replace+ method.
-    def initialize(page, per_page = WillPaginate.per_page, total = nil)
+    def initialize(page, per_page = WillPaginate.per_page_default, total = nil)
       @current_page = WillPaginate::PageNumber(page)
-      @per_page = per_page.to_i
+      @per_page = WillPaginate.safe_per_page(per_page.to_i)
       self.total_entries = total if total
     end
 

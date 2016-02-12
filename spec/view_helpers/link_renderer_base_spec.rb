@@ -9,9 +9,7 @@ describe WillPaginate::ViewHelpers::LinkRendererBase do
   end
 
   it "should raise error when unprepared" do
-    expect {
-      @renderer.pagination
-    }.to raise_error
+    expect { @renderer.pagination }.to raise_error(NoMethodError)
   end
 
   it "should prepare with collection and options" do
