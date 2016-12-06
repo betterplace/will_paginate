@@ -11,6 +11,12 @@ describe WillPaginate::Collection do
     expect(@simple.paginate(:page => 1, :per_page => 3)).to eq(%w( a b c ))
   end
 
+  it "falls back to WillPaginate.per_page_default if #per_page is nil" do
+    ary = @simple.paginate(:page => 1, :per_page => 3)
+    allow(ary).to receive(:per_page).and_return nil
+    expect(ary.total_pages).to eq 1
+  end
+
   it "can be shorter than per_page if on last page" do
     expect(@simple.paginate(:page => 2, :per_page => 3)).to eq(%w( d e ))
   end
