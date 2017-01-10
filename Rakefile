@@ -19,7 +19,7 @@ GemHadar do
   development_dependency 'rspec',         '~>3.0'
   development_dependency 'sqlite3',       '~>1.3'
   development_dependency 'simplecov',     '~>0.10'
-  development_dependency 'rails',         '~> 4.0'
+  development_dependency 'rails',         '>= 4.0', '<6'
 
   default_task_dependencies :spec
 end

@@ -14,14 +14,7 @@ module WillPaginate
 
     def initialize(value, name)
       @name = name
-      value = value.to_i
-      if name == 'offset'
-        if value < 0 || value > BIGINT
-          raise RangeError, "invalid #{name}: #{value.inspect}"
-        end
-      else
-        value = [ 1, value ].max
-      end
+      value = [ name == 'offset' ? 0 : 1, value.to_i ].max
       super(value)
     rescue ArgumentError, TypeError, RangeError => error
       error.extend InvalidPage

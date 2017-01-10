@@ -26,9 +26,7 @@ module WillPaginate
     end
 
     def self.setup_actioncontroller
-      ( defined?(ActionDispatch::ExceptionWrapper) ?
-        ActionDispatch::ExceptionWrapper : ActionDispatch::ShowExceptions
-      ).send :include, ShowExceptionsPatch
+      ActionDispatch::ExceptionWrapper.send :prepend, ShowExceptionsPatch
       ActionController::Base.extend ControllerRescuePatch
     end
 
@@ -39,20 +37,13 @@ module WillPaginate
     # Extending the exception handler middleware so it properly detects
     # WillPaginate::InvalidPage regardless of it being a tag module.
     module ShowExceptionsPatch
-      extend ActiveSupport::Concern
-      included { alias_method_chain :status_code, :paginate }
-      def status_code_with_paginate(exception = @exception)
-        if exception.is_a?(WillPaginate::InvalidPage) or
-            (exception.respond_to?(:original_exception) &&
-              exception.original_exception.is_a?(WillPaginate::InvalidPage))
+      def status_code
+        if @exception.is_a?(WillPaginate::InvalidPage) or
+            (@exception.respond_to?(:original_exception) &&
+              @exception.original_exception.is_a?(WillPaginate::InvalidPage))
           Rack::Utils.status_code(:not_found)
         else
-          original_method = method(:status_code_without_paginate)
-          if original_method.arity != 0
-            original_method.call(exception)
-          else
-            original_method.call()
-          end
+          super
         end
       end
     end

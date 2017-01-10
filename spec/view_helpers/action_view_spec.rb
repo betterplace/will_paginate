@@ -13,7 +13,8 @@ Routes.draw do
   get 'ibocorp(/:page)' => 'ibocorp#index',
         :constraints => { :page => /\d+/ }, :defaults => { :page => 1 }
 
-  get ':controller(/:action(/:id(.:format)))'
+  get 'foo/bar' => 'foo#bar'
+  get 'baz/list' => 'baz#list'
 end
 
 describe WillPaginate::ActionView do
@@ -259,7 +260,7 @@ describe WillPaginate::ActionView do
   end
 
   it "should paginate with custom route page parameter" do
-    request.symbolized_path_parameters.update :controller => 'dummy', :action => nil
+    request.symbolized_path_parameters.update :controller => 'dummy', :action => 'index'
     paginate :per_page => 2 do
       assert_select 'a[href]', 6 do |links|
         assert_links_match %r{/page/(\d+)$}, links, [2, 3, 4, 5, 6, 2]
@@ -277,7 +278,7 @@ describe WillPaginate::ActionView do
   end
 
   it "should paginate with custom route and first page number implicit" do
-    request.symbolized_path_parameters.update :controller => 'ibocorp', :action => nil
+    request.symbolized_path_parameters.update :controller => 'ibocorp', :action => 'index'
     paginate :page => 2, :per_page => 2 do
       assert_select 'a[href]', 7 do |links|
         assert_links_match %r{/ibocorp(?:/(\d+))?$}, links, [nil, nil, 3, 4, 5, 6, 3]
@@ -414,6 +415,14 @@ class DummyRequest
     @get = true
     @params = {}
     @symbolized_path_parameters = { :controller => 'foo', :action => 'bar' }
+  end
+
+  def engine_script_name(*a)
+    '/'
+  end
+
+  def routes
+    null = Class.new { define_method(:method_missing) { |*| null } }.new
   end
 
   def get?

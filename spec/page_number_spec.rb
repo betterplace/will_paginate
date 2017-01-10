@@ -44,9 +44,9 @@ describe WillPaginate::PageNumber do
       expect(create(-1)).to eq 1
     end
 
-    it "doesn't error out on zero for 'offset'" do
-      expect { create(0, 'offset') }.not_to raise_error
-      expect { create(-1, 'offset') }.to raise_error(WillPaginate::InvalidPage)
+    it "doesn't error out for 'offset'" do
+      expect(create(0, 'offset')).to eq 0
+      expect(create(-1, 'offset')).to eq 0
     end
   end
 
