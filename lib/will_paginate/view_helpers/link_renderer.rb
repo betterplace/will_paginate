@@ -120,6 +120,11 @@ module WillPaginate
     end
 
     def symbolized_update(target, other)
+      # Rails 5 fix by JMU, FFR and JOP, depends on betterplace initializer.
+      # ActionController::Parameters are no longer a Hash, therefore the need
+      # to be converted before #symbolized_update can work.
+      other = other.weak_hash
+      
       other.each do |key, value|
         key = key.to_sym
         existing = target[key]
